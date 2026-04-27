@@ -50,6 +50,7 @@
           <div class="bar-chart">
             <div v-for="(month, index) in monthlyData" :key="index" class="bar-wrapper">
               <div class="bar-container">
+                <div class="bar-value">${{ formatNumber(month.revenue) }}</div>
                 <div
                   class="bar"
                   :style="{ height: getBarHeight(month.revenue) + 'px' }"
@@ -311,8 +312,17 @@ export default {
 .bar-container {
   height: 200px;
   display: flex;
-  align-items: flex-end;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
   width: 100%;
+}
+
+.bar-value {
+  font-size: 0.6rem;
+  color: #6b7280;
+  margin-bottom: 2px;
+  white-space: nowrap;
 }
 
 .bar {
