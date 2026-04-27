@@ -2,6 +2,7 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Optional
 from pydantic import BaseModel
+from datetime import datetime
 from mock_data import inventory_items, orders, demand_forecasts, backlog_items, spending_summary, monthly_spending, category_spending, recent_transactions, purchase_orders
 
 app = FastAPI(title="Meridian Components Inventory Management System")
@@ -118,6 +119,24 @@ class CreatePurchaseOrderRequest(BaseModel):
     quantity: int
     unit_cost: float
     expected_delivery_date: str
+    notes: Optional[str] = None
+
+class RestockingRecommendation(BaseModel):
+    sku: str
+    name: str
+    category: str
+    warehouse: str
+    quantity_on_hand: int
+    reorder_point: int
+    unit_cost: float
+    forecasted_demand: Optional[int] = None
+    trend: Optional[str] = None
+    recommended_quantity: int
+    estimated_cost: float
+    priority_score: float
+
+class RestockingCreatePORequest(BaseModel):
+    items: List[dict]
     notes: Optional[str] = None
 
 # API endpoints
@@ -308,6 +327,91 @@ def get_monthly_trends(
     result = list(months.values())
     result.sort(key=lambda x: x['month'])
     return result
+
+@app.get("/api/restocking/recommendations", response_model=List[RestockingRecommendation])
+def get_restocking_recommendations(
+    budget: Optional[float] = None,
+    warehouse: Optional[str] = None,
+    category: Optional[str] = None
+):
+    """Get restocking recommendations based on stock levels, demand forecasts, and optional budget ceiling."""
+    filtered = apply_filters(inventory_items, warehouse, category)
+    demand_map = {f["item_sku"]: f for f in demand_forecasts}
+
+    candidates = []
+    for item in filtered:
+        qty = item["quantity_on_hand"]
+        reorder = item["reorder_point"]
+        forecast = demand_map.get(item["sku"])
+        forecasted_demand = forecast["forecasted_demand"] if forecast else None
+        trend = forecast["trend"] if forecast else None
+
+        is_below_reorder = qty <= reorder
+        is_demand_driven = (trend == "increasing" and forecasted_demand is not None and qty < forecasted_demand)
+
+        if not is_below_reorder and not is_demand_driven:
+            continue
+
+        target = max(reorder * 2, forecasted_demand or 0)
+        recommended_quantity = max(0, target - qty)
+        if recommended_quantity == 0:
+            continue
+
+        estimated_cost = round(recommended_quantity * item["unit_cost"], 2)
+        stock_deficit = reorder - qty
+        trend_bonus = 20.0 if trend == "increasing" else 0.0
+        priority_score = round(stock_deficit + trend_bonus, 2)
+
+        candidates.append({
+            "sku": item["sku"],
+            "name": item["name"],
+            "category": item["category"],
+            "warehouse": item["warehouse"],
+            "quantity_on_hand": qty,
+            "reorder_point": reorder,
+            "unit_cost": item["unit_cost"],
+            "forecasted_demand": forecasted_demand,
+            "trend": trend,
+            "recommended_quantity": recommended_quantity,
+            "estimated_cost": estimated_cost,
+            "priority_score": priority_score
+        })
+
+    candidates.sort(key=lambda x: x["priority_score"], reverse=True)
+
+    if budget and budget > 0:
+        selected = []
+        remaining = budget
+        for item in candidates:
+            if item["estimated_cost"] <= remaining:
+                selected.append(item)
+                remaining -= item["estimated_cost"]
+        candidates = selected
+
+    return candidates
+
+
+@app.post("/api/purchase-orders")
+def create_purchase_orders(request: RestockingCreatePORequest):
+    """Create purchase orders from restocking recommendations."""
+    created = []
+    for item in request.items:
+        po = {
+            "id": str(len(purchase_orders) + len(created) + 1),
+            "sku": item.get("sku"),
+            "name": item.get("name"),
+            "warehouse": item.get("warehouse"),
+            "quantity": item.get("quantity"),
+            "unit_cost": item.get("unit_cost"),
+            "estimated_cost": round(item.get("quantity", 0) * item.get("unit_cost", 0), 2),
+            "status": "pending",
+            "created_date": datetime.utcnow().isoformat(),
+            "notes": request.notes
+        }
+        purchase_orders.append(po)
+        created.append(po)
+    return created
+
 
 if __name__ == "__main__":
     import uvicorn

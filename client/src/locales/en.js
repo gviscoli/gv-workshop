@@ -6,6 +6,7 @@ export default {
     orders: 'Orders',
     finance: 'Finance',
     demandForecast: 'Demand Forecast',
+    restocking: 'Restocking',
     companyName: 'Meridian Components',
     subtitle: 'Inventory Management System'
   },
@@ -309,6 +310,30 @@ export default {
     english: 'English',
     japanese: 'Japanese',
     selectLanguage: 'Select Language'
+  },
+
+  // Restocking
+  restocking: {
+    title: 'Restocking Recommendations',
+    description: 'Identify items needing replenishment and generate purchase orders',
+    budgetSettings: 'Budget Settings',
+    budgetCeiling: 'Budget Ceiling',
+    budgetPlaceholder: 'No limit (leave blank)',
+    getRecommendations: 'Get Recommendations',
+    clearBudget: 'Clear Budget',
+    itemsNeedingRestock: 'Items Needing Restock',
+    selectedItems: 'Selected Items',
+    selectedCost: 'Selected Cost',
+    recommendations: 'Recommendations',
+    selectAll: 'Select All',
+    deselectAll: 'Deselect All',
+    recommendedQty: 'Recommended Qty',
+    estimatedCost: 'Estimated Cost',
+    itemsSelected: 'items selected',
+    totalCost: 'Total Cost',
+    submitOrders: 'Submit Purchase Orders',
+    noRecommendations: 'No items need restocking with current filters and budget.',
+    ordersSubmitted: 'purchase order(s) submitted successfully.'
   },
 
   // Common

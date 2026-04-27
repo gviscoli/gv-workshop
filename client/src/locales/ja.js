@@ -6,6 +6,7 @@ export default {
     orders: '注文',
     finance: '財務',
     demandForecast: '需要予測',
+    restocking: '補充推奨',
     companyName: 'メリディアン・コンポーネンツ',
     subtitle: '在庫管理システム'
   },
@@ -309,6 +310,30 @@ export default {
     english: 'English',
     japanese: '日本語',
     selectLanguage: '言語を選択'
+  },
+
+  // Restocking
+  restocking: {
+    title: '補充推奨',
+    description: '補充が必要な品目を特定し、発注書を作成する',
+    budgetSettings: '予算設定',
+    budgetCeiling: '予算上限',
+    budgetPlaceholder: '上限なし（空白のまま）',
+    getRecommendations: '推奨を取得',
+    clearBudget: '予算をクリア',
+    itemsNeedingRestock: '補充が必要な品目',
+    selectedItems: '選択した品目',
+    selectedCost: '選択コスト',
+    recommendations: '推奨',
+    selectAll: 'すべて選択',
+    deselectAll: '選択を解除',
+    recommendedQty: '推奨数量',
+    estimatedCost: '推定コスト',
+    itemsSelected: '件の品目が選択済み',
+    totalCost: '合計コスト',
+    submitOrders: '発注書を送信',
+    noRecommendations: '現在のフィルターと予算で補充が必要な品目はありません。',
+    ordersSubmitted: '件の発注書が正常に送信されました。'
   },
 
   // Common
